@@ -10,10 +10,8 @@ class GenericRole implements RoleInterface, Stringable
 {
     /**
      * Unique id of Role
-     *
-     * @var string
      */
-    protected $roleId;
+    protected string $roleId;
 
     /**
      * Sets the Role identifier

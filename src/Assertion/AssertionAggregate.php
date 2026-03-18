@@ -34,9 +34,8 @@ class AssertionAggregate implements AssertionInterface
      *
      * @param AssertionInterface|string $assertion
      *    if string, must match a AssertionManager declared service (checked later)
-     * @return self
      */
-    public function addAssertion($assertion)
+    public function addAssertion($assertion): static
     {
         $this->assertions[] = $assertion;
 
@@ -47,7 +46,7 @@ class AssertionAggregate implements AssertionInterface
      * @param array<array-key, AssertionInterface|string> $assertions
      * @return $this
      */
-    public function addAssertions(array $assertions)
+    public function addAssertions(array $assertions): static
     {
         foreach ($assertions as $assertion) {
             $this->addAssertion($assertion);
@@ -58,10 +57,8 @@ class AssertionAggregate implements AssertionInterface
 
     /**
      * Empties assertions stack
-     *
-     * @return self
      */
-    public function clearAssertions()
+    public function clearAssertions(): static
     {
         $this->assertions = [];
 
@@ -69,7 +66,7 @@ class AssertionAggregate implements AssertionInterface
     }
 
     /** @return $this */
-    public function setAssertionManager(AssertionManager $manager)
+    public function setAssertionManager(AssertionManager $manager): static
     {
         $this->assertionManager = $manager;
 
@@ -93,9 +90,8 @@ class AssertionAggregate implements AssertionInterface
      * @param string $mode
      *    indicates how assertion chain result should interpreted (either 'all' or 'at_least_one')
      * @throws InvalidArgumentException
-     * @return self
      */
-    public function setMode($mode)
+    public function setMode($mode): static
     {
         if ($mode !== self::MODE_ALL && $mode !== self::MODE_AT_LEAST_ONE) {
             throw new InvalidArgumentException('invalid assertion aggregate mode');
@@ -121,14 +117,13 @@ class AssertionAggregate implements AssertionInterface
      *
      * @param string|null $privilege
      * @throws RuntimeException
-     * @return bool
      */
     public function assert(
         Acl $acl,
         ?RoleInterface $role = null,
         ?ResourceInterface $resource = null,
         $privilege = null
-    ) {
+    ): bool {
         // check if assertions are set
         if (! $this->assertions) {
             throw new RuntimeException('no assertion have been aggregated to this AssertionAggregate');
@@ -172,8 +167,7 @@ class AssertionAggregate implements AssertionInterface
         if ($this->getMode() === self::MODE_ALL) {
             // none of the assertions returned false
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 }

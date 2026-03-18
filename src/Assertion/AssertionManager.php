@@ -27,14 +27,14 @@ class AssertionManager extends AbstractPluginManager
      * @throws InvalidServiceException
      * @psalm-assert AssertionInterface $instance
      */
-    public function validate($instance)
+    public function validate($instance): void
     {
         if (! $instance instanceof $this->instanceOf) {
             throw new InvalidServiceException(sprintf(
                 '%s can only create instances of %s; %s is invalid',
                 self::class,
                 $this->instanceOf,
-                is_object($instance) ? $instance::class : gettype($instance)
+                get_debug_type($instance)
             ));
         }
     }
@@ -49,7 +49,7 @@ class AssertionManager extends AbstractPluginManager
      * @throws InvalidArgumentException
      * @psalm-assert AssertionInterface $instance
      */
-    public function validatePlugin(mixed $instance)
+    public function validatePlugin(mixed $instance): void
     {
         try {
             $this->validate($instance);

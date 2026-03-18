@@ -103,11 +103,10 @@ final class ExpressionAssertion implements AssertionInterface
      * @param mixed|array $left See the class description for valid values.
      * @param string $operator One of the OPERATOR constants (or their values)
      * @param mixed|array $right See the class description for valid values.
-     * @return self
      * @throws InvalidAssertionException If either operand is invalid.
      * @throws InvalidAssertionException If the operator is not supported.
      */
-    public static function fromProperties($left, $operator, $right)
+    public static function fromProperties($left, $operator, $right): self
     {
         $operator = strtolower($operator);
 
@@ -151,7 +150,7 @@ final class ExpressionAssertion implements AssertionInterface
      * @param mixed|array $operand
      * @throws InvalidAssertionException If the operand is invalid.
      */
-    private static function validateOperand($operand)
+    private static function validateOperand($operand): void
     {
         if (is_array($operand) && isset($operand[self::OPERAND_CONTEXT_PROPERTY])) {
             if (! is_string($operand[self::OPERAND_CONTEXT_PROPERTY])) {
@@ -164,7 +163,7 @@ final class ExpressionAssertion implements AssertionInterface
      * @param string $operator
      * @throws InvalidAssertionException If the operator is not supported.
      */
-    private static function validateOperator($operator)
+    private static function validateOperator($operator): void
     {
         if (! in_array($operator, self::$validOperators, true)) {
             throw new InvalidAssertionException('Provided expression assertion operator is not supported');
@@ -259,12 +258,11 @@ final class ExpressionAssertion implements AssertionInterface
      * @param array $context Contains the acl, privilege, role, and resource
      *     being tested currently.
      * @param string $objectName Name of object in context to use.
-     * @param string $field
      * @return mixed
      * @throws RuntimeException If object cannot be resolved in context.
      * @throws RuntimeException If property cannot be resolved.
      */
-    private function getObjectFieldValue(array $context, $objectName, $field)
+    private function getObjectFieldValue(array $context, string $objectName, string $field)
     {
         if (! isset($context[$objectName])) {
             throw new RuntimeException(sprintf(
@@ -324,9 +322,9 @@ final class ExpressionAssertion implements AssertionInterface
             case self::OPERATOR_NIN:
                 return ! in_array($left, $right);
             case self::OPERATOR_REGEX:
-                return (bool) preg_match($right, $left);
+                return (bool) preg_match($right, (string) $left);
             case self::OPERATOR_NREGEX:
-                return ! (bool) preg_match($right, $left);
+                return ! (bool) preg_match($right, (string) $left);
             case self::OPERATOR_SAME:
                 return $left === $right;
             case self::OPERATOR_NSAME:
@@ -336,11 +334,10 @@ final class ExpressionAssertion implements AssertionInterface
     }
 
     /**
-     * @param object $object
      * @param string $property
      * @return bool
      */
-    private function propertyExists($object, $property)
+    private function propertyExists(object $object, $property)
     {
         if (! property_exists($object, $property)) {
             return false;

@@ -37,7 +37,7 @@ class Registry
      * @throws Exception\InvalidArgumentException
      * @return $this Provides a fluent interface
      */
-    public function add(RoleInterface $role, $parents = null)
+    public function add(RoleInterface $role, $parents = null): static
     {
         $roleId = $role->getRoleId();
 
@@ -112,9 +112,8 @@ class Registry
      * The $role parameter can either be a Role or a Role identifier.
      *
      * @param  RoleInterface|string $role
-     * @return bool
      */
-    public function has($role)
+    public function has($role): bool
     {
         if ($role instanceof RoleInterface) {
             $roleId = $role->getRoleId();
@@ -193,7 +192,7 @@ class Registry
      * @throws Exception\InvalidArgumentException
      * @return Registry Provides a fluent interface
      */
-    public function remove($role)
+    public function remove($role): static
     {
         try {
             $roleId = $this->get($role)->getRoleId();
@@ -218,7 +217,7 @@ class Registry
      *
      * @return Registry Provides a fluent interface
      */
-    public function removeAll()
+    public function removeAll(): static
     {
         $this->roles = [];
 

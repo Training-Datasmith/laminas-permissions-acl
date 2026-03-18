@@ -10,10 +10,8 @@ class GenericResource implements ResourceInterface, Stringable
 {
     /**
      * Unique id of Resource
-     *
-     * @var string
      */
-    protected $resourceId;
+    protected string $resourceId;
 
     /**
      * Sets the Resource identifier

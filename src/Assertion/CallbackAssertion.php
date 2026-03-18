@@ -39,14 +39,13 @@ class CallbackAssertion implements AssertionInterface
      * respectively.
      *
      * @param string            $privilege
-     * @return bool
      */
     public function assert(
         Acl $acl,
         ?RoleInterface $role = null,
         ?ResourceInterface $resource = null,
         $privilege = null
-    ) {
+    ): bool {
         return (bool) call_user_func($this->callback, $acl, $role, $resource, $privilege);
     }
 }
