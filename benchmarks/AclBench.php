@@ -51,7 +51,7 @@ class AclBench
         }
         for ($i = 0; $i < self::NUM_ALLOW_CALLED; $i++) {
             $role = (string) (intdiv($i * 3, 2) % (self::NUM_ROLES_WITHOUT_PARENT + self::NUM_ROLES_WITH_PARENT));
-            if ($i %2 ) {
+            if ($i % 2) {
                 $resource = (string) (intdiv($i * 7, 5) % self::NUM_RESOURCES);
             } else {
                 $resource = null;
@@ -60,7 +60,7 @@ class AclBench
         }
         for ($i = 0; $i < self::NUM_DENY_CALLED; $i++) {
             $role = (string) (intdiv($i * 13, 11) % (self::NUM_ROLES_WITHOUT_PARENT + self::NUM_ROLES_WITH_PARENT));
-            if ($i %2 ) {
+            if ($i % 2) {
                 $resource = (string) (intdiv($i * 19, 17) % self::NUM_RESOURCES);
             } else {
                 $resource = null;

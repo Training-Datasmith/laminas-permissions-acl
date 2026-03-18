@@ -4,20 +4,23 @@ declare(strict_types=1);
 
 namespace Laminas\Permissions\Acl;
 
-use Laminas\Permissions\Acl\Assertion\AssertionInterface;
-use Laminas\Permissions\Acl\Exception\ExceptionInterface;
-use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
-use Laminas\Permissions\Acl\Exception\RuntimeException;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Throwable;
-
 use function array_key_exists;
 use function array_keys;
 use function array_pop;
 use function is_array;
 use function is_string;
+
+use Laminas\Permissions\Acl\Assertion\AssertionInterface;
+
+use Laminas\Permissions\Acl\Exception\ExceptionInterface;
+use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
+use Laminas\Permissions\Acl\Exception\RuntimeException;
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
+
 use function sprintf;
 use function strtoupper;
+
+use Throwable;
 
 class Acl implements AclInterface
 {
@@ -603,7 +606,7 @@ class Acl implements AclInterface
             case self::OP_ADD:
                 foreach ($resourcesToApplyRules as $resource) {
                     foreach ($roles as $role) {
-                        $rules =& $this->getRules($resource, $role, true);
+                        $rules = & $this->getRules($resource, $role, true);
                         if (! $privileges) {
                             $rules['allPrivileges']['type']   = $type;
                             $rules['allPrivileges']['assert'] = $assert;
@@ -620,11 +623,11 @@ class Acl implements AclInterface
                 }
                 break;
 
-            // remove from the rules
+                // remove from the rules
             case self::OP_REMOVE:
                 foreach ($resourcesToApplyRules as $resource) {
                     foreach ($roles as $role) {
-                        $rules =& $this->getRules($resource, $role);
+                        $rules = & $this->getRules($resource, $role);
                         if (null === $rules) {
                             continue;
                         }
@@ -1060,12 +1063,12 @@ class Acl implements AclInterface
     ) {
         // create a reference to null
         $null    = null;
-        $nullRef =& $null;
+        $nullRef = & $null;
 
         // follow $resource
         do {
             if (null === $resource) {
-                $visitor =& $this->rules['allResources'];
+                $visitor = & $this->rules['allResources'];
                 break;
             }
             $resourceId = $resource->getResourceId();
@@ -1075,7 +1078,7 @@ class Acl implements AclInterface
                 }
                 $this->rules['byResourceId'][$resourceId] = [];
             }
-            $visitor =& $this->rules['byResourceId'][$resourceId];
+            $visitor = & $this->rules['byResourceId'][$resourceId];
         } while (false);
 
         // follow $role

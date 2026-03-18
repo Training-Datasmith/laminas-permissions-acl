@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace Laminas\Permissions\Acl\Assertion;
 
+use function class_exists;
+
 use Exception;
 use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Assertion\Exception\InvalidAssertionException;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
 use Laminas\Permissions\Acl\Exception\RuntimeException;
 use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
 
-use function class_exists;
+use Laminas\Permissions\Acl\Role\RoleInterface;
 
 class AssertionAggregate implements AssertionInterface
 {

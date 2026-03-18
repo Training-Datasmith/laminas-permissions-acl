@@ -4,25 +4,29 @@ declare(strict_types=1);
 
 namespace Laminas\Permissions\Acl\Assertion;
 
-use Laminas\Permissions\Acl\Acl;
-use Laminas\Permissions\Acl\Assertion\Exception\InvalidAssertionException;
-use Laminas\Permissions\Acl\Exception\RuntimeException;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
-use ReflectionProperty;
-
 use function array_flip;
 use function array_intersect_key;
 use function assert;
 use function count;
 use function explode;
 use function in_array;
+
 use function is_array;
 use function is_object;
 use function is_string;
+
+use Laminas\Permissions\Acl\Acl;
+use Laminas\Permissions\Acl\Assertion\Exception\InvalidAssertionException;
+use Laminas\Permissions\Acl\Exception\RuntimeException;
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
+use Laminas\Permissions\Acl\Role\RoleInterface;
+
 use function method_exists;
 use function preg_match;
 use function property_exists;
+
+use ReflectionProperty;
+
 use function sprintf;
 use function str_contains;
 use function str_replace;

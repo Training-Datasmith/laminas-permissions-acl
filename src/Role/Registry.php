@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Laminas\Permissions\Acl\Role;
 
-use Laminas\Permissions\Acl\Exception;
-use Traversable;
-
 use function is_array;
+
+use Laminas\Permissions\Acl\Exception;
+
 use function sprintf;
+
+use Traversable;
 
 class Registry
 {

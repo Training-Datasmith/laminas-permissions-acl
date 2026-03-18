@@ -8,8 +8,6 @@ use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
 use Laminas\ServiceManager\AbstractPluginManager;
 use Laminas\ServiceManager\Exception\InvalidServiceException;
 
-use function gettype;
-use function is_object;
 use function sprintf;
 
 /** @extends AbstractPluginManager<AssertionInterface> */

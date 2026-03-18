@@ -66,7 +66,7 @@ final class CallbackAssertionTest extends TestCase
     {
         $acl        = new Acl\Acl();
         $roleGuest  = new Acl\Role\GenericRole('guest');
-        $assertMock = static fn($value) => static fn($aclArg, $roleArg, $resourceArg, $privilegeArg) => $value;
+        $assertMock = static fn ($value) => static fn ($aclArg, $roleArg, $resourceArg, $privilegeArg) => $value;
         $acl->addRole($roleGuest);
         $acl->allow($roleGuest, null, 'somePrivilege', new CallbackAssertion($assertMock(true)));
         $this->assertTrue($acl->isAllowed($roleGuest, null, 'somePrivilege'));

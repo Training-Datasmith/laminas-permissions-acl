@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Laminas\Permissions\Acl\Assertion;
 
-use Laminas\Permissions\Acl\Acl;
-use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
-
 use function call_user_func;
 use function is_callable;
+
+use Laminas\Permissions\Acl\Acl;
+use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
+
+use Laminas\Permissions\Acl\Resource\ResourceInterface;
+use Laminas\Permissions\Acl\Role\RoleInterface;
 
 class CallbackAssertion implements AssertionInterface
 {
