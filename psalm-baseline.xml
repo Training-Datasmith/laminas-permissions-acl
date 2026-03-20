@@ -341,7 +341,7 @@
       <code><![CDATA[getRoleId]]></code>
     </MixedMethodCall>
     <TooManyArguments>
-      <code><![CDATA[new Resource\GenericResource('profiles', 'gallery')]]></code>
+      <code><![CDATA[new Resource\Generic_Resource('profiles', 'gallery')]]></code>
     </TooManyArguments>
     <UndefinedClass>
       <code><![CDATA[$assertion->assertReturnValue]]></code>
