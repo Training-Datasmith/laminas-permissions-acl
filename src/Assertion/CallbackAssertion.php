@@ -1,34 +1,28 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl\Assertion;
 
 use function call_user_func;
 use function is_callable;
-
 use Laminas\Permissions\Acl\Acl;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
-
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
-
-class CallbackAssertion implements AssertionInterface
+use Laminas\Permissions\Acl\Resource\Resource_Interface;
+use Laminas\Permissions\Acl\Role\Role_Interface;
+class Callback_Assertion implements Assertion_Interface
 {
     /** @var callable */
     protected $callback;
-
     /**
      * @param callable $callback The assertion callback
      */
     public function __construct($callback)
     {
-        if (! is_callable($callback)) {
+        if (!is_callable($callback)) {
             throw new InvalidArgumentException('Invalid callback provided; not callable');
         }
         $this->callback = $callback;
     }
-
     /**
      * Returns true if and only if the assertion conditions are met.
      *
@@ -41,12 +35,8 @@ class CallbackAssertion implements AssertionInterface
      *
      * @param string            $privilege
      */
-    public function assert(
-        Acl $acl,
-        ?RoleInterface $role = null,
-        ?ResourceInterface $resource = null,
-        $privilege = null
-    ): bool {
+    public function assert(Acl $acl, ?Role_Interface $role = null, ?Resource_Interface $resource = null, $privilege = null): bool
+    {
         return (bool) call_user_func($this->callback, $acl, $role, $resource, $privilege);
     }
 }

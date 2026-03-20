@@ -1,36 +1,28 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl\Assertion;
 
 use Laminas\Permissions\Acl\Acl;
-use Laminas\Permissions\Acl\ProprietaryInterface;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
-
+use Laminas\Permissions\Acl\Proprietary_Interface;
+use Laminas\Permissions\Acl\Resource\Resource_Interface;
+use Laminas\Permissions\Acl\Role\Role_Interface;
 /**
  * Makes sure that some Resource is owned by certain Role.
  */
-class OwnershipAssertion implements AssertionInterface
+class Ownership_Assertion implements Assertion_Interface
 {
     /** @inheritDoc */
-    public function assert(
-        Acl $acl,
-        ?RoleInterface $role = null,
-        ?ResourceInterface $resource = null,
-        $privilege = null
-    ) {
+    public function assert(Acl $acl, ?Role_Interface $role = null, ?Resource_Interface $resource = null, $privilege = null)
+    {
         //Assert passes if role or resource is not proprietary
-        if (! $role instanceof ProprietaryInterface || ! $resource instanceof ProprietaryInterface) {
+        if (!$role instanceof Proprietary_Interface || !$resource instanceof Proprietary_Interface) {
             return true;
         }
-
         //Assert passes if resources does not have an owner
-        if ($resource->getOwnerId() === null) {
+        if ($resource->get_owner_id() === null) {
             return true;
         }
-
-        return $resource->getOwnerId() === $role->getOwnerId();
+        return $resource->get_owner_id() === $role->get_owner_id();
     }
 }

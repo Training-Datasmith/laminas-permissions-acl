@@ -1,7 +1,6 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl;
 
 /**
@@ -10,10 +9,10 @@ namespace Laminas\Permissions\Acl;
  * Provides information about the owner of some object. Used in conjunction
  * with the Ownership assertion.
  */
-interface ProprietaryInterface
+interface Proprietary_Interface
 {
     /**
      * @return mixed
      */
-    public function getOwnerId();
+    public function get_owner_id();
 }

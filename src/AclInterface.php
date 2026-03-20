@@ -1,10 +1,9 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl;
 
-interface AclInterface
+interface Acl_Interface
 {
     /**
      * Returns true if and only if the Resource exists in the ACL
@@ -14,8 +13,7 @@ interface AclInterface
      * @param  Resource\ResourceInterface|string $resource
      * @return bool
      */
-    public function hasResource($resource);
-
+    public function has_resource($resource);
     /**
      * Returns true if and only if the Role has access to the Resource
      *
@@ -42,5 +40,5 @@ interface AclInterface
      * @param  string                               $privilege
      * @return bool
      */
-    public function isAllowed($role = null, $resource = null, $privilege = null);
+    public function is_allowed($role = null, $resource = null, $privilege = null);
 }

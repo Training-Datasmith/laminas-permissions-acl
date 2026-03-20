@@ -1,7 +1,6 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl;
 
 use function array_key_exists;
@@ -9,91 +8,63 @@ use function array_keys;
 use function array_pop;
 use function is_array;
 use function is_string;
-
-use Laminas\Permissions\Acl\Assertion\AssertionInterface;
-
-use Laminas\Permissions\Acl\Exception\ExceptionInterface;
+use Laminas\Permissions\Acl\Assertion\Assertion_Interface;
+use Laminas\Permissions\Acl\Exception\Exception_Interface;
 use Laminas\Permissions\Acl\Exception\InvalidArgumentException;
 use Laminas\Permissions\Acl\Exception\RuntimeException;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-
+use Laminas\Permissions\Acl\Resource\Resource_Interface;
 use function sprintf;
 use function strtoupper;
-
 use Throwable;
-
-class Acl implements AclInterface
+class Acl implements Acl_Interface
 {
     /**
      * Rule type: allow
      */
     public const TYPE_ALLOW = 'TYPE_ALLOW';
-
     /**
      * Rule type: deny
      */
     public const TYPE_DENY = 'TYPE_DENY';
-
     /**
      * Rule operation: add
      */
     public const OP_ADD = 'OP_ADD';
-
     /**
      * Rule operation: remove
      */
     public const OP_REMOVE = 'OP_REMOVE';
-
     /**
      * Role registry
      *
      * @var Role\Registry|null
      */
-    protected $roleRegistry;
-
+    protected $role_registry;
     /**
      * Resource tree
      *
      * @var array
      */
     protected $resources = [];
-
     /**
      * Resources by resourceId plus a null element
      * Used to speed up setRule()
      *
      * @var array<int|string, ResourceInterface|null>
      */
-    private array $resourcesById = [null];
-
+    private array $resources_by_id = [null];
     /** @var Role\RoleInterface|null */
-    protected $isAllowedRole;
-
+    protected $is_allowed_role;
     /** @var ResourceInterface|null */
-    protected $isAllowedResource;
-
+    protected $is_allowed_resource;
     /** @var string|null */
-    protected $isAllowedPrivilege;
-
+    protected $is_allowed_privilege;
     /**
      * ACL rules; whitelist (deny everything to all) by default
      *
      * @var array
      */
-    protected $rules = [
-        'allResources' => [
-            'allRoles' => [
-                'allPrivileges' => [
-                    'type'   => self::TYPE_DENY,
-                    'assert' => null,
-                ],
-                'byPrivilegeId' => [],
-            ],
-            'byRoleId' => [],
-        ],
-        'byResourceId' => [],
-    ];
-
+    protected $rules = ['allResources' => ['allRoles' => ['allPrivileges' => ['type' => self::TYPE_DENY, 'assert' => null], 'byPrivilegeId' => []], 'byRoleId' => []], 'byResourceId' => []];
     /**
      * Adds a Role having an identifier unique to the registry
      *
@@ -113,21 +84,16 @@ class Acl implements AclInterface
      * @throws InvalidArgumentException
      * @return Acl Provides a fluent interface
      */
-    public function addRole($role, $parents = null): static
+    public function add_role($role, $parents = null): static
     {
         if (is_string($role)) {
-            $role = new Role\GenericRole($role);
-        } elseif (! $role instanceof Role\RoleInterface) {
-            throw new InvalidArgumentException(
-                'addRole() expects $role to be of type Laminas\Permissions\Acl\Role\RoleInterface'
-            );
+            $role = new Role\Generic_Role($role);
+        } elseif (!$role instanceof Role\Role_Interface) {
+            throw new InvalidArgumentException('addRole() expects $role to be of type Laminas\Permissions\Acl\Role\RoleInterface');
         }
-
-        $this->getRoleRegistry()->add($role, $parents);
-
+        $this->get_role_registry()->add($role, $parents);
         return $this;
     }
-
     /**
      * Returns the identified Role
      *
@@ -136,11 +102,10 @@ class Acl implements AclInterface
      * @param  Role\RoleInterface|string $role
      * @return Role\RoleInterface
      */
-    public function getRole($role)
+    public function get_role($role)
     {
-        return $this->getRoleRegistry()->get($role);
+        return $this->get_role_registry()->get($role);
     }
-
     /**
      * Returns true if and only if the Role exists in the registry
      *
@@ -149,11 +114,10 @@ class Acl implements AclInterface
      * @param  Role\RoleInterface|string $role
      * @return bool
      */
-    public function hasRole($role)
+    public function has_role($role)
     {
-        return $this->getRoleRegistry()->has($role);
+        return $this->get_role_registry()->has($role);
     }
-
     /**
      * Returns true if and only if $role inherits from $inherit
      *
@@ -168,11 +132,10 @@ class Acl implements AclInterface
      * @param  bool                      $onlyParents
      * @return bool
      */
-    public function inheritsRole($role, $inherit, $onlyParents = false)
+    public function inherits_role($role, $inherit, $only_parents = false)
     {
-        return $this->getRoleRegistry()->inherits($role, $inherit, $onlyParents);
+        return $this->get_role_registry()->inherits($role, $inherit, $only_parents);
     }
-
     /**
      * Removes the Role from the registry
      *
@@ -181,55 +144,48 @@ class Acl implements AclInterface
      * @param  Role\RoleInterface|string $role
      * @return Acl Provides a fluent interface
      */
-    public function removeRole($role): static
+    public function remove_role($role): static
     {
-        $this->getRoleRegistry()->remove($role);
-
-        if ($role instanceof Role\RoleInterface) {
-            $roleId = $role->getRoleId();
+        $this->get_role_registry()->remove($role);
+        if ($role instanceof Role\Role_Interface) {
+            $role_id = $role->get_role_id();
         } else {
-            $roleId = $role;
+            $role_id = $role;
         }
-
-        foreach ($this->rules['allResources']['byRoleId'] as $roleIdCurrent => $rules) {
-            if ($roleId === $roleIdCurrent) {
-                unset($this->rules['allResources']['byRoleId'][$roleIdCurrent]);
+        foreach ($this->rules['allResources']['byRoleId'] as $role_id_current => $rules) {
+            if ($role_id === $role_id_current) {
+                unset($this->rules['allResources']['byRoleId'][$role_id_current]);
             }
         }
-        foreach ($this->rules['byResourceId'] as $resourceIdCurrent => $visitor) {
+        foreach ($this->rules['byResourceId'] as $resource_id_current => $visitor) {
             if (array_key_exists('byRoleId', $visitor)) {
-                foreach ($visitor['byRoleId'] as $roleIdCurrent => $rules) {
-                    if ($roleId === $roleIdCurrent) {
-                        unset($this->rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]);
+                foreach ($visitor['byRoleId'] as $role_id_current => $rules) {
+                    if ($role_id === $role_id_current) {
+                        unset($this->rules['byResourceId'][$resource_id_current]['byRoleId'][$role_id_current]);
                     }
                 }
             }
         }
-
         return $this;
     }
-
     /**
      * Removes all Roles from the registry
      *
      * @return Acl Provides a fluent interface
      */
-    public function removeRoleAll(): static
+    public function remove_role_all(): static
     {
-        $this->getRoleRegistry()->removeAll();
-
-        foreach ($this->rules['allResources']['byRoleId'] as $roleIdCurrent => $rules) {
-            unset($this->rules['allResources']['byRoleId'][$roleIdCurrent]);
+        $this->get_role_registry()->remove_all();
+        foreach ($this->rules['allResources']['byRoleId'] as $role_id_current => $rules) {
+            unset($this->rules['allResources']['byRoleId'][$role_id_current]);
         }
-        foreach ($this->rules['byResourceId'] as $resourceIdCurrent => $visitor) {
-            foreach ($visitor['byRoleId'] as $roleIdCurrent => $rules) {
-                unset($this->rules['byResourceId'][$resourceIdCurrent]['byRoleId'][$roleIdCurrent]);
+        foreach ($this->rules['byResourceId'] as $resource_id_current => $visitor) {
+            foreach ($visitor['byRoleId'] as $role_id_current => $rules) {
+                unset($this->rules['byResourceId'][$resource_id_current]['byRoleId'][$role_id_current]);
             }
         }
-
         return $this;
     }
-
     /**
      * Adds a Resource having an identifier unique to the ACL
      *
@@ -241,50 +197,35 @@ class Acl implements AclInterface
      * @throws InvalidArgumentException
      * @return Acl Provides a fluent interface
      */
-    public function addResource($resource, $parent = null): static
+    public function add_resource($resource, $parent = null): static
     {
         if (is_string($resource)) {
-            $resource = new Resource\GenericResource($resource);
-        } elseif (! $resource instanceof ResourceInterface) {
-            throw new InvalidArgumentException(
-                'addResource() expects $resource to be of type Laminas\Permissions\Acl\Resource\ResourceInterface'
-            );
+            $resource = new Resource\Generic_Resource($resource);
+        } elseif (!$resource instanceof Resource_Interface) {
+            throw new InvalidArgumentException('addResource() expects $resource to be of type Laminas\Permissions\Acl\Resource\ResourceInterface');
         }
-
-        $resourceId = $resource->getResourceId();
-
-        if ($this->hasResource($resourceId)) {
-            throw new InvalidArgumentException("Resource id '$resourceId' already exists in the ACL");
+        $resource_id = $resource->get_resource_id();
+        if ($this->has_resource($resource_id)) {
+            throw new InvalidArgumentException("Resource id '{$resource_id}' already exists in the ACL");
         }
-
-        $resourceParent = null;
-
+        $resource_parent = null;
         if (null !== $parent) {
             try {
-                if ($parent instanceof ResourceInterface) {
-                    $resourceParentId = $parent->getResourceId();
+                if ($parent instanceof Resource_Interface) {
+                    $resource_parent_id = $parent->get_resource_id();
                 } else {
-                    $resourceParentId = $parent;
+                    $resource_parent_id = $parent;
                 }
-                $resourceParent = $this->getResource($resourceParentId);
+                $resource_parent = $this->get_resource($resource_parent_id);
             } catch (Throwable $e) {
-                throw new InvalidArgumentException(sprintf(
-                    'Parent Resource id "%s" does not exist',
-                    $resourceParentId
-                ), 0, $e);
+                throw new InvalidArgumentException(sprintf('Parent Resource id "%s" does not exist', $resource_parent_id), 0, $e);
             }
-            $this->resources[$resourceParentId]['children'][$resourceId] = $resource;
+            $this->resources[$resource_parent_id]['children'][$resource_id] = $resource;
         }
-
-        $this->resources[$resourceId]     = [
-            'instance' => $resource,
-            'parent'   => $resourceParent,
-            'children' => [],
-        ];
-        $this->resourcesById[$resourceId] = $resource;
+        $this->resources[$resource_id] = ['instance' => $resource, 'parent' => $resource_parent, 'children' => []];
+        $this->resources_by_id[$resource_id] = $resource;
         return $this;
     }
-
     /**
      * Returns the identified Resource
      *
@@ -294,21 +235,18 @@ class Acl implements AclInterface
      * @throws InvalidArgumentException
      * @return ResourceInterface
      */
-    public function getResource($resource)
+    public function get_resource($resource)
     {
-        if ($resource instanceof ResourceInterface) {
-            $resourceId = $resource->getResourceId();
+        if ($resource instanceof Resource_Interface) {
+            $resource_id = $resource->get_resource_id();
         } else {
-            $resourceId = (string) $resource;
+            $resource_id = (string) $resource;
         }
-
-        if (! $this->hasResource($resource)) {
-            throw new InvalidArgumentException("Resource '$resourceId' not found");
+        if (!$this->has_resource($resource)) {
+            throw new InvalidArgumentException("Resource '{$resource_id}' not found");
         }
-
-        return $this->resources[$resourceId]['instance'];
+        return $this->resources[$resource_id]['instance'];
     }
-
     /**
      * Returns true if and only if the Resource exists in the ACL
      *
@@ -316,17 +254,15 @@ class Acl implements AclInterface
      *
      * @param  ResourceInterface|string $resource
      */
-    public function hasResource($resource): bool
+    public function has_resource($resource): bool
     {
-        if ($resource instanceof ResourceInterface) {
-            $resourceId = $resource->getResourceId();
+        if ($resource instanceof Resource_Interface) {
+            $resource_id = $resource->get_resource_id();
         } else {
-            $resourceId = (string) $resource;
+            $resource_id = (string) $resource;
         }
-
-        return isset($this->resources[$resourceId]);
+        return isset($this->resources[$resource_id]);
     }
-
     /**
      * Returns true if and only if $resource inherits from $inherit
      *
@@ -341,37 +277,33 @@ class Acl implements AclInterface
      * @param  bool                              $onlyParent
      * @throws InvalidArgumentException
      */
-    public function inheritsResource($resource, $inherit, $onlyParent = false): bool
+    public function inherits_resource($resource, $inherit, $only_parent = false): bool
     {
         try {
-            $resourceId = $this->getResource($resource)->getResourceId();
-            $inheritId  = $this->getResource($inherit)->getResourceId();
-        } catch (ExceptionInterface $e) {
-            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+            $resource_id = $this->get_resource($resource)->get_resource_id();
+            $inherit_id = $this->get_resource($inherit)->get_resource_id();
+        } catch (Exception_Interface $e) {
+            throw new InvalidArgumentException($e->get_message(), $e->get_code(), $e);
         }
-
-        if (null !== $this->resources[$resourceId]['parent']) {
-            $parentId = $this->resources[$resourceId]['parent']->getResourceId();
-            if ($inheritId === $parentId) {
+        if (null !== $this->resources[$resource_id]['parent']) {
+            $parent_id = $this->resources[$resource_id]['parent']->get_resource_id();
+            if ($inherit_id === $parent_id) {
                 return true;
             }
-            if ($onlyParent) {
+            if ($only_parent) {
                 return false;
             }
         } else {
             return false;
         }
-
-        while (null !== $this->resources[$parentId]['parent']) {
-            $parentId = $this->resources[$parentId]['parent']->getResourceId();
-            if ($inheritId === $parentId) {
+        while (null !== $this->resources[$parent_id]['parent']) {
+            $parent_id = $this->resources[$parent_id]['parent']->get_resource_id();
+            if ($inherit_id === $parent_id) {
                 return true;
             }
         }
-
         return false;
     }
-
     /**
      * Removes a Resource and all of its children
      *
@@ -381,52 +313,45 @@ class Acl implements AclInterface
      * @throws InvalidArgumentException
      * @return Acl Provides a fluent interface
      */
-    public function removeResource($resource): static
+    public function remove_resource($resource): static
     {
         try {
-            $resourceId = $this->getResource($resource)->getResourceId();
-        } catch (ExceptionInterface $e) {
-            throw new InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+            $resource_id = $this->get_resource($resource)->get_resource_id();
+        } catch (Exception_Interface $e) {
+            throw new InvalidArgumentException($e->get_message(), $e->get_code(), $e);
         }
-
-        $resourcesRemoved = [$resourceId];
-        if (null !== ($resourceParent = $this->resources[$resourceId]['parent'])) {
-            unset($this->resources[$resourceParent->getResourceId()]['children'][$resourceId]);
+        $resources_removed = [$resource_id];
+        if (null !== $resource_parent = $this->resources[$resource_id]['parent']) {
+            unset($this->resources[$resource_parent->get_resource_id()]['children'][$resource_id]);
         }
-        foreach ($this->resources[$resourceId]['children'] as $childId => $child) {
-            $this->removeResource($childId);
-            $resourcesRemoved[] = $childId;
+        foreach ($this->resources[$resource_id]['children'] as $child_id => $child) {
+            $this->remove_resource($child_id);
+            $resources_removed[] = $child_id;
         }
-
-        foreach ($resourcesRemoved as $resourceIdRemoved) {
-            foreach ($this->rules['byResourceId'] as $resourceIdCurrent => $rules) {
-                if ($resourceIdRemoved === $resourceIdCurrent) {
-                    unset($this->rules['byResourceId'][$resourceIdCurrent]);
+        foreach ($resources_removed as $resource_id_removed) {
+            foreach ($this->rules['byResourceId'] as $resource_id_current => $rules) {
+                if ($resource_id_removed === $resource_id_current) {
+                    unset($this->rules['byResourceId'][$resource_id_current]);
                 }
             }
         }
-
-        unset($this->resources[$resourceId]);
-
+        unset($this->resources[$resource_id]);
         return $this;
     }
-
     /**
      * Removes all Resources
      *
      * @return Acl Provides a fluent interface
      */
-    public function removeResourceAll(): static
+    public function remove_resource_all(): static
     {
-        foreach ($this->resources as $resourceId => $resource) {
-            unset($this->rules['byResourceId'][$resourceId]);
+        foreach ($this->resources as $resource_id => $resource) {
+            unset($this->rules['byResourceId'][$resource_id]);
         }
-
-        $this->resources     = [];
-        $this->resourcesById = [null];
+        $this->resources = [];
+        $this->resources_by_id = [null];
         return $this;
     }
-
     /**
      * Adds an "allow" rule to the ACL
      *
@@ -435,15 +360,10 @@ class Acl implements AclInterface
      * @param  string|array|null                            $privileges
      * @return Acl Provides a fluent interface
      */
-    public function allow(
-        $roles = null,
-        $resources = null,
-        $privileges = null,
-        ?AssertionInterface $assert = null
-    ) {
-        return $this->setRule(self::OP_ADD, self::TYPE_ALLOW, $roles, $resources, $privileges, $assert);
+    public function allow($roles = null, $resources = null, $privileges = null, ?Assertion_Interface $assert = null)
+    {
+        return $this->set_rule(self::OP_ADD, self::TYPE_ALLOW, $roles, $resources, $privileges, $assert);
     }
-
     /**
      * Adds a "deny" rule to the ACL
      *
@@ -452,15 +372,10 @@ class Acl implements AclInterface
      * @param  string|array|null                            $privileges
      * @return Acl Provides a fluent interface
      */
-    public function deny(
-        $roles = null,
-        $resources = null,
-        $privileges = null,
-        ?AssertionInterface $assert = null
-    ) {
-        return $this->setRule(self::OP_ADD, self::TYPE_DENY, $roles, $resources, $privileges, $assert);
+    public function deny($roles = null, $resources = null, $privileges = null, ?Assertion_Interface $assert = null)
+    {
+        return $this->set_rule(self::OP_ADD, self::TYPE_DENY, $roles, $resources, $privileges, $assert);
     }
-
     /**
      * Removes "allow" permissions from the ACL
      *
@@ -469,11 +384,10 @@ class Acl implements AclInterface
      * @param  string|array|null                            $privileges
      * @return Acl Provides a fluent interface
      */
-    public function removeAllow($roles = null, $resources = null, $privileges = null)
+    public function remove_allow($roles = null, $resources = null, $privileges = null)
     {
-        return $this->setRule(self::OP_REMOVE, self::TYPE_ALLOW, $roles, $resources, $privileges);
+        return $this->set_rule(self::OP_REMOVE, self::TYPE_ALLOW, $roles, $resources, $privileges);
     }
-
     /**
      * Removes "deny" restrictions from the ACL
      *
@@ -482,11 +396,10 @@ class Acl implements AclInterface
      * @param  string|array|null                            $privileges
      * @return Acl Provides a fluent interface
      */
-    public function removeDeny($roles = null, $resources = null, $privileges = null)
+    public function remove_deny($roles = null, $resources = null, $privileges = null)
     {
-        return $this->setRule(self::OP_REMOVE, self::TYPE_DENY, $roles, $resources, $privileges);
+        return $this->set_rule(self::OP_REMOVE, self::TYPE_DENY, $roles, $resources, $privileges);
     }
-
     /**
      * Performs operations on ACL rules
      *
@@ -536,124 +449,100 @@ class Acl implements AclInterface
      * @throws InvalidArgumentException
      * @return Acl Provides a fluent interface
      */
-    public function setRule(
-        $operation,
-        $type,
-        $roles = null,
-        $resources = null,
-        $privileges = null,
-        ?AssertionInterface $assert = null
-    ): static {
+    public function set_rule($operation, $type, $roles = null, $resources = null, $privileges = null, ?Assertion_Interface $assert = null): static
+    {
         // ensure that the rule type is valid; normalize input to uppercase
         $type = strtoupper($type);
         if (self::TYPE_ALLOW !== $type && self::TYPE_DENY !== $type) {
-            throw new InvalidArgumentException(sprintf(
-                'Unsupported rule type; must be either "%s" or "%s"',
-                self::TYPE_ALLOW,
-                self::TYPE_DENY
-            ));
+            throw new InvalidArgumentException(sprintf('Unsupported rule type; must be either "%s" or "%s"', self::TYPE_ALLOW, self::TYPE_DENY));
         }
-
         // ensure that all specified Roles exist; normalize input to array of Role objects or null
-        if (! is_array($roles)) {
+        if (!is_array($roles)) {
             $roles = [$roles];
-        } elseif (! $roles) {
+        } elseif (!$roles) {
             $roles = [null];
         }
-        $rolesTemp = $roles;
-        $roles     = [];
-        foreach ($rolesTemp as $role) {
+        $roles_temp = $roles;
+        $roles = [];
+        foreach ($roles_temp as $role) {
             if (null !== $role) {
-                $roles[] = $this->getRoleRegistry()->get($role);
+                $roles[] = $this->get_role_registry()->get($role);
             } else {
                 $roles[] = null;
             }
         }
-        unset($rolesTemp);
+        unset($roles_temp);
         /** var array<int|string, ResourceInterface|null> */
-        $resourcesToApplyRules = [];
+        $resources_to_apply_rules = [];
         if (null === $resources && $this->resources) {
-            $resourcesToApplyRules = $this->resourcesById;
+            $resources_to_apply_rules = $this->resources_by_id;
         } else {
             // ensure that all specified Resources exist; normalize input to array of Resource objects or null
-            if (! is_array($resources)) {
+            if (!is_array($resources)) {
                 $resources = [$resources];
-            } elseif (! $resources) {
+            } elseif (!$resources) {
                 $resources = [null];
             }
             foreach ($resources as $resource) {
                 if (null !== $resource) {
-                    $resourceObj = $this->getResource($resource);
-                    $resourceId  = $resourceObj->getResourceId();
-                    $this->getChildResourcesIntoReference($resourceObj, $resourcesToApplyRules);
-                    $resourcesToApplyRules[$resourceId] = $resourceObj;
+                    $resource_obj = $this->get_resource($resource);
+                    $resource_id = $resource_obj->get_resource_id();
+                    $this->get_child_resources_into_reference($resource_obj, $resources_to_apply_rules);
+                    $resources_to_apply_rules[$resource_id] = $resource_obj;
                 } else {
-                    $resourcesToApplyRules[] = null;
+                    $resources_to_apply_rules[] = null;
                 }
             }
             unset($resources);
         }
-
         // normalize privileges to array
         if (null === $privileges) {
             $privileges = [];
-        } elseif (! is_array($privileges)) {
+        } elseif (!is_array($privileges)) {
             $privileges = [$privileges];
         }
-
         switch ($operation) {
             // add to the rules
             case self::OP_ADD:
-                foreach ($resourcesToApplyRules as $resource) {
+                foreach ($resources_to_apply_rules as $resource) {
                     foreach ($roles as $role) {
-                        $rules = & $this->getRules($resource, $role, true);
-                        if (! $privileges) {
-                            $rules['allPrivileges']['type']   = $type;
+                        $rules =& $this->get_rules($resource, $role, true);
+                        if (!$privileges) {
+                            $rules['allPrivileges']['type'] = $type;
                             $rules['allPrivileges']['assert'] = $assert;
-                            if (! isset($rules['byPrivilegeId'])) {
+                            if (!isset($rules['byPrivilegeId'])) {
                                 $rules['byPrivilegeId'] = [];
                             }
                         } else {
                             foreach ($privileges as $privilege) {
-                                $rules['byPrivilegeId'][$privilege]['type']   = $type;
+                                $rules['byPrivilegeId'][$privilege]['type'] = $type;
                                 $rules['byPrivilegeId'][$privilege]['assert'] = $assert;
                             }
                         }
                     }
                 }
                 break;
-
-                // remove from the rules
+            // remove from the rules
             case self::OP_REMOVE:
-                foreach ($resourcesToApplyRules as $resource) {
+                foreach ($resources_to_apply_rules as $resource) {
                     foreach ($roles as $role) {
-                        $rules = & $this->getRules($resource, $role);
+                        $rules =& $this->get_rules($resource, $role);
                         if (null === $rules) {
                             continue;
                         }
-                        if (! $privileges) {
+                        if (!$privileges) {
                             if (null === $resource && null === $role) {
                                 if ($type === $rules['allPrivileges']['type']) {
-                                    $rules = [
-                                        'allPrivileges' => [
-                                            'type'   => self::TYPE_DENY,
-                                            'assert' => null,
-                                        ],
-                                        'byPrivilegeId' => [],
-                                    ];
+                                    $rules = ['allPrivileges' => ['type' => self::TYPE_DENY, 'assert' => null], 'byPrivilegeId' => []];
                                 }
                                 continue;
                             }
-
                             if (isset($rules['allPrivileges']['type']) && $type === $rules['allPrivileges']['type']) {
                                 unset($rules['allPrivileges']);
                             }
                         } else {
                             foreach ($privileges as $privilege) {
-                                if (
-                                    isset($rules['byPrivilegeId'][$privilege])
-                                    && $type === $rules['byPrivilegeId'][$privilege]['type']
-                                ) {
+                                if (isset($rules['byPrivilegeId'][$privilege]) && $type === $rules['byPrivilegeId'][$privilege]['type']) {
                                     unset($rules['byPrivilegeId'][$privilege]);
                                 }
                             }
@@ -661,35 +550,27 @@ class Acl implements AclInterface
                     }
                 }
                 break;
-
             default:
-                throw new InvalidArgumentException(sprintf(
-                    'Unsupported operation; must be either "%s" or "%s"',
-                    self::OP_ADD,
-                    self::OP_REMOVE
-                ));
+                throw new InvalidArgumentException(sprintf('Unsupported operation; must be either "%s" or "%s"', self::OP_ADD, self::OP_REMOVE));
         }
-
         return $this;
     }
-
     /**
      * Returns all child resources from the given resource.
      *
      * @param array<int|string, ResourceInterface|null> $return
      * @return array<int|string, ResourceInterface|null>
      */
-    private function getChildResourcesIntoReference(ResourceInterface $resource, array &$return = []): array
+    private function get_child_resources_into_reference(Resource_Interface $resource, array &$return = []): array
     {
-        $id       = $resource->getResourceId();
+        $id = $resource->get_resource_id();
         $children = $this->resources[$id]['children'];
         foreach ($children as $child) {
-            $this->getChildResourcesIntoReference($child, $return);
-            $return[$child->getResourceId()] = $child;
+            $this->get_child_resources_into_reference($child, $return);
+            $return[$child->get_resource_id()] = $child;
         }
         return $return;
     }
-
     /**
      * Returns all child resources from the given resource.
      *
@@ -699,11 +580,10 @@ class Acl implements AclInterface
      *
      * @return array<int|string, ResourceInterface|null>
      */
-    protected function getChildResources(ResourceInterface $resource)
+    protected function get_child_resources(Resource_Interface $resource)
     {
-        return $this->getChildResourcesIntoReference($resource);
+        return $this->get_child_resources_into_reference($resource);
     }
-
     /**
      * Returns true if and only if the Role has access to the Resource
      *
@@ -730,82 +610,76 @@ class Acl implements AclInterface
      * @param  string                               $privilege
      * @return bool
      */
-    public function isAllowed($role = null, $resource = null, $privilege = null)
+    public function is_allowed($role = null, $resource = null, $privilege = null)
     {
         // reset role & resource to null
-        $this->isAllowedRole      = null;
-        $this->isAllowedResource  = null;
-        $this->isAllowedPrivilege = null;
-
+        $this->is_allowed_role = null;
+        $this->is_allowed_resource = null;
+        $this->is_allowed_privilege = null;
         if (null !== $role) {
             // keep track of originally called role
-            $this->isAllowedRole = $role;
-            $role                = $this->getRoleRegistry()->get($role);
-            if (! $this->isAllowedRole instanceof Role\RoleInterface) {
-                $this->isAllowedRole = $role;
+            $this->is_allowed_role = $role;
+            $role = $this->get_role_registry()->get($role);
+            if (!$this->is_allowed_role instanceof Role\Role_Interface) {
+                $this->is_allowed_role = $role;
             }
         }
-
         if (null !== $resource) {
             // keep track of originally called resource
-            $this->isAllowedResource = $resource;
-            $resource                = $this->getResource($resource);
-            if (! $this->isAllowedResource instanceof ResourceInterface) {
-                $this->isAllowedResource = $resource;
+            $this->is_allowed_resource = $resource;
+            $resource = $this->get_resource($resource);
+            if (!$this->is_allowed_resource instanceof Resource_Interface) {
+                $this->is_allowed_resource = $resource;
             }
         }
-
         if (null === $privilege) {
             // query on all privileges
             do {
                 // depth-first search on $role if it is not 'allRoles' pseudo-parent
-                if (null !== $role && null !== ($result = $this->roleDFSAllPrivileges($role, $resource))) {
+                if (null !== $role && null !== $result = $this->role_dfs_all_privileges($role, $resource)) {
                     return $result;
                 }
-
                 // look for rule on 'allRoles' pseudo-parent
-                if (null !== ($rules = $this->getRules($resource))) {
+                if (null !== $rules = $this->get_rules($resource)) {
                     foreach ($rules['byPrivilegeId'] as $privilege => $rule) {
-                        if (self::TYPE_DENY === $this->getRuleType($resource, null, $privilege)) {
+                        if (self::TYPE_DENY === $this->get_rule_type($resource, null, $privilege)) {
                             return false;
                         }
                     }
-                    $ruleTypeAllPrivileges = $this->getRuleType($resource);
-                    if (null !== $ruleTypeAllPrivileges) {
-                        return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
+                    $rule_type_all_privileges = $this->get_rule_type($resource);
+                    if (null !== $rule_type_all_privileges) {
+                        return self::TYPE_ALLOW === $rule_type_all_privileges;
                     }
                 }
-
                 // try next Resource
-                $resource = $this->resources[$resource->getResourceId()]['parent'];
-            } while (true); // loop terminates at 'allResources' pseudo-parent
+                $resource = $this->resources[$resource->get_resource_id()]['parent'];
+            } while (true);
+            // loop terminates at 'allResources' pseudo-parent
         } else {
-            $this->isAllowedPrivilege = $privilege;
+            $this->is_allowed_privilege = $privilege;
             // query on one privilege
             do {
                 // depth-first search on $role if it is not 'allRoles' pseudo-parent
-                if (null !== $role && null !== ($result = $this->roleDFSOnePrivilege($role, $resource, $privilege))) {
+                if (null !== $role && null !== $result = $this->role_dfs_one_privilege($role, $resource, $privilege)) {
                     return $result;
                 }
                 // look for rule on 'allRoles' pseudo-parent
-                if (null !== ($ruleType = $this->getRuleType($resource, null, $privilege))) {
-                    return self::TYPE_ALLOW === $ruleType;
+                if (null !== $rule_type = $this->get_rule_type($resource, null, $privilege)) {
+                    return self::TYPE_ALLOW === $rule_type;
                 }
-
                 // look for rule on 'allRoles' pseudo-parent
-                if (null !== ($ruleTypeAllPrivileges = $this->getRuleType($resource))) {
-                    $result = self::TYPE_ALLOW === $ruleTypeAllPrivileges;
+                if (null !== $rule_type_all_privileges = $this->get_rule_type($resource)) {
+                    $result = self::TYPE_ALLOW === $rule_type_all_privileges;
                     if ($result || null === $resource) {
                         return $result;
                     }
                 }
-
                 // try next Resource
-                $resource = $this->resources[$resource->getResourceId()]['parent'];
-            } while (true); // loop terminates at 'allResources' pseudo-parent
+                $resource = $this->resources[$resource->get_resource_id()]['parent'];
+            } while (true);
+            // loop terminates at 'allResources' pseudo-parent
         }
     }
-
     /**
      * Returns the Role registry for this ACL
      *
@@ -814,14 +688,13 @@ class Acl implements AclInterface
      *
      * @return Role\Registry
      */
-    protected function getRoleRegistry()
+    protected function get_role_registry()
     {
-        if (null === $this->roleRegistry) {
-            $this->roleRegistry = new Role\Registry();
+        if (null === $this->role_registry) {
+            $this->role_registry = new Role\Registry();
         }
-        return $this->roleRegistry;
+        return $this->role_registry;
     }
-
     /**
      * Performs a depth-first search of the Role DAG, starting at $role, in order to find a rule
      * allowing/denying $role access to all privileges upon $resource
@@ -831,27 +704,21 @@ class Acl implements AclInterface
      *
      * @return bool|null
      */
-    protected function roleDFSAllPrivileges(Role\RoleInterface $role, ?ResourceInterface $resource = null)
+    protected function role_dfs_all_privileges(Role\Role_Interface $role, ?Resource_Interface $resource = null)
     {
-        $dfs = [
-            'visited' => [],
-            'stack'   => [],
-        ];
-
-        if (null !== ($result = $this->roleDFSVisitAllPrivileges($role, $resource, $dfs))) {
+        $dfs = ['visited' => [], 'stack' => []];
+        if (null !== $result = $this->role_dfs_visit_all_privileges($role, $resource, $dfs)) {
             return $result;
         }
-
         // This comment is needed due to a strange php-cs-fixer bug
-        while (null !== ($role = array_pop($dfs['stack']))) {
-            if (! isset($dfs['visited'][$role->getRoleId()])) {
-                if (null !== ($result = $this->roleDFSVisitAllPrivileges($role, $resource, $dfs))) {
+        while (null !== $role = array_pop($dfs['stack'])) {
+            if (!isset($dfs['visited'][$role->get_role_id()])) {
+                if (null !== $result = $this->role_dfs_visit_all_privileges($role, $resource, $dfs)) {
                     return $result;
                 }
             }
         }
     }
-
     /**
      * Visits an $role in order to look for a rule allowing/denying $role access to all privileges upon $resource
      *
@@ -864,32 +731,26 @@ class Acl implements AclInterface
      * @return bool|void
      * @throws RuntimeException
      */
-    protected function roleDFSVisitAllPrivileges(
-        Role\RoleInterface $role,
-        ?ResourceInterface $resource = null,
-        &$dfs = null
-    ) {
+    protected function role_dfs_visit_all_privileges(Role\Role_Interface $role, ?Resource_Interface $resource = null, &$dfs = null)
+    {
         if (null === $dfs) {
             throw new RuntimeException('$dfs parameter may not be null');
         }
-
-        if (null !== ($rules = $this->getRules($resource, $role))) {
+        if (null !== $rules = $this->get_rules($resource, $role)) {
             foreach ($rules['byPrivilegeId'] as $privilege => $rule) {
-                if (self::TYPE_DENY === ($ruleTypeOnePrivilege = $this->getRuleType($resource, $role, $privilege))) {
+                if (self::TYPE_DENY === $rule_type_one_privilege = $this->get_rule_type($resource, $role, $privilege)) {
                     return false;
                 }
             }
-            if (null !== ($ruleTypeAllPrivileges = $this->getRuleType($resource, $role))) {
-                return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
+            if (null !== $rule_type_all_privileges = $this->get_rule_type($resource, $role)) {
+                return self::TYPE_ALLOW === $rule_type_all_privileges;
             }
         }
-
-        $dfs['visited'][$role->getRoleId()] = true;
-        foreach ($this->getRoleRegistry()->getParents($role) as $roleParent) {
-            $dfs['stack'][] = $roleParent;
+        $dfs['visited'][$role->get_role_id()] = true;
+        foreach ($this->get_role_registry()->get_parents($role) as $role_parent) {
+            $dfs['stack'][] = $role_parent;
         }
     }
-
     /**
      * Performs a depth-first search of the Role DAG, starting at $role, in order to find a rule
      * allowing/denying $role access to a $privilege upon $resource
@@ -901,34 +762,24 @@ class Acl implements AclInterface
      * @return bool|void
      * @throws RuntimeException
      */
-    protected function roleDFSOnePrivilege(
-        Role\RoleInterface $role,
-        ?ResourceInterface $resource = null,
-        $privilege = null
-    ) {
+    protected function role_dfs_one_privilege(Role\Role_Interface $role, ?Resource_Interface $resource = null, $privilege = null)
+    {
         if (null === $privilege) {
             throw new RuntimeException('$privilege parameter may not be null');
         }
-
-        $dfs = [
-            'visited' => [],
-            'stack'   => [],
-        ];
-
-        if (null !== ($result = $this->roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs))) {
+        $dfs = ['visited' => [], 'stack' => []];
+        if (null !== $result = $this->role_dfs_visit_one_privilege($role, $resource, $privilege, $dfs)) {
             return $result;
         }
-
         // This comment is needed due to a strange php-cs-fixer bug
-        while (null !== ($role = array_pop($dfs['stack']))) {
-            if (! isset($dfs['visited'][$role->getRoleId()])) {
-                if (null !== ($result = $this->roleDFSVisitOnePrivilege($role, $resource, $privilege, $dfs))) {
+        while (null !== $role = array_pop($dfs['stack'])) {
+            if (!isset($dfs['visited'][$role->get_role_id()])) {
+                if (null !== $result = $this->role_dfs_visit_one_privilege($role, $resource, $privilege, $dfs)) {
                     return $result;
                 }
             }
         }
     }
-
     /**
      * Visits an $role in order to look for a rule allowing/denying $role access to a $privilege upon $resource
      *
@@ -942,33 +793,25 @@ class Acl implements AclInterface
      * @return bool|void
      * @throws RuntimeException
      */
-    protected function roleDFSVisitOnePrivilege(
-        Role\RoleInterface $role,
-        ?ResourceInterface $resource = null,
-        $privilege = null,
-        &$dfs = null
-    ) {
+    protected function role_dfs_visit_one_privilege(Role\Role_Interface $role, ?Resource_Interface $resource = null, $privilege = null, &$dfs = null)
+    {
         if (null === $privilege) {
             throw new RuntimeException('$privilege parameter may not be null');
         }
-
         if (null === $dfs) {
             throw new RuntimeException('$dfs parameter may not be null');
         }
-        if (null !== ($ruleTypeOnePrivilege = $this->getRuleType($resource, $role, $privilege))) {
-            return self::TYPE_ALLOW === $ruleTypeOnePrivilege;
+        if (null !== $rule_type_one_privilege = $this->get_rule_type($resource, $role, $privilege)) {
+            return self::TYPE_ALLOW === $rule_type_one_privilege;
         }
-
-        if (null !== ($ruleTypeAllPrivileges = $this->getRuleType($resource, $role))) {
-            return self::TYPE_ALLOW === $ruleTypeAllPrivileges;
+        if (null !== $rule_type_all_privileges = $this->get_rule_type($resource, $role)) {
+            return self::TYPE_ALLOW === $rule_type_all_privileges;
         }
-
-        $dfs['visited'][$role->getRoleId()] = true;
-        foreach ($this->getRoleRegistry()->getParents($role) as $roleParent) {
-            $dfs['stack'][] = $roleParent;
+        $dfs['visited'][$role->get_role_id()] = true;
+        foreach ($this->get_role_registry()->get_parents($role) as $role_parent) {
+            $dfs['stack'][] = $role_parent;
         }
     }
-
     /**
      * Returns the rule type associated with the specified Resource, Role, and privilege
      * combination.
@@ -988,63 +831,46 @@ class Acl implements AclInterface
      * @param  null|string                      $privilege
      * @return string|null
      */
-    protected function getRuleType(
-        ?ResourceInterface $resource = null,
-        ?Role\RoleInterface $role = null,
-        $privilege = null
-    ) {
+    protected function get_rule_type(?Resource_Interface $resource = null, ?Role\Role_Interface $role = null, $privilege = null)
+    {
         // Pull all rules for the specified $resource and $role
-        if (null === ($rules = $this->getRules($resource, $role))) {
+        if (null === $rules = $this->get_rules($resource, $role)) {
             // No rules discovered
             return null;
         }
-
         // Follow $privilege
         $rule = null;
         if (null === $privilege && isset($rules['allPrivileges'])) {
             // No privilege specified, but allPrivileges rule exists
             $rule = $rules['allPrivileges'];
         }
-
         if (null !== $privilege && isset($rules['byPrivilegeId'][$privilege])) {
             // Privilege specified, and found in ruleset
             $rule = $rules['byPrivilegeId'][$privilege];
         }
-
         if (null === $rule) {
             // No rule identified
             return null;
         }
-
         // Was a custom assertion supplied? Use it to retrieve the rule type.
         if ($rule['assert']) {
             /** @var AssertionInterface $assertion */
-            $assertion      = $rule['assert'];
-            $assertionValue = $assertion->assert(
-                $this,
-                $this->isAllowedRole instanceof Role\RoleInterface ? $this->isAllowedRole : $role,
-                $this->isAllowedResource instanceof ResourceInterface ? $this->isAllowedResource : $resource,
-                $this->isAllowedPrivilege
-            );
+            $assertion = $rule['assert'];
+            $assertion_value = $assertion->assert($this, $this->is_allowed_role instanceof Role\Role_Interface ? $this->is_allowed_role : $role, $this->is_allowed_resource instanceof Resource_Interface ? $this->is_allowed_resource : $resource, $this->is_allowed_privilege);
         } else {
-            $assertionValue = true;
+            $assertion_value = true;
         }
-
-        if ($assertionValue) {
+        if ($assertion_value) {
             return $rule['type'];
         }
-
         if (null !== $resource || null !== $role || null !== $privilege) {
             return null;
         }
-
         if (self::TYPE_ALLOW === $rule['type']) {
             return self::TYPE_DENY;
         }
-
         return self::TYPE_ALLOW;
     }
-
     /**
      * Returns the rules associated with a Resource and a Role, or null if no such rules exist
      *
@@ -1056,63 +882,56 @@ class Acl implements AclInterface
      * @param  bool $create
      * @return array|null
      */
-    protected function &getRules(
-        ?ResourceInterface $resource = null,
-        ?Role\RoleInterface $role = null,
-        $create = false
-    ) {
+    protected function &get_rules(?Resource_Interface $resource = null, ?Role\Role_Interface $role = null, $create = false)
+    {
         // create a reference to null
-        $null    = null;
-        $nullRef = & $null;
-
+        $null = null;
+        $null_ref =& $null;
         // follow $resource
         do {
             if (null === $resource) {
-                $visitor = & $this->rules['allResources'];
+                $visitor =& $this->rules['allResources'];
                 break;
             }
-            $resourceId = $resource->getResourceId();
-            if (! isset($this->rules['byResourceId'][$resourceId])) {
-                if (! $create) {
-                    return $nullRef;
+            $resource_id = $resource->get_resource_id();
+            if (!isset($this->rules['byResourceId'][$resource_id])) {
+                if (!$create) {
+                    return $null_ref;
                 }
-                $this->rules['byResourceId'][$resourceId] = [];
+                $this->rules['byResourceId'][$resource_id] = [];
             }
-            $visitor = & $this->rules['byResourceId'][$resourceId];
+            $visitor =& $this->rules['byResourceId'][$resource_id];
         } while (false);
-
         // follow $role
         if (null === $role) {
-            if (! isset($visitor['allRoles'])) {
-                if (! $create) {
-                    return $nullRef;
+            if (!isset($visitor['allRoles'])) {
+                if (!$create) {
+                    return $null_ref;
                 }
                 $visitor['allRoles']['byPrivilegeId'] = [];
             }
             return $visitor['allRoles'];
         }
-        $roleId = $role->getRoleId();
-        if (! isset($visitor['byRoleId'][$roleId])) {
-            if (! $create) {
-                return $nullRef;
+        $role_id = $role->get_role_id();
+        if (!isset($visitor['byRoleId'][$role_id])) {
+            if (!$create) {
+                return $null_ref;
             }
-            $visitor['byRoleId'][$roleId]['byPrivilegeId'] = [];
+            $visitor['byRoleId'][$role_id]['byPrivilegeId'] = [];
         }
-        return $visitor['byRoleId'][$roleId];
+        return $visitor['byRoleId'][$role_id];
     }
-
     /**
      * @return array of registered roles
      */
-    public function getRoles(): array
+    public function get_roles(): array
     {
-        return array_keys($this->getRoleRegistry()->getRoles());
+        return array_keys($this->get_role_registry()->get_roles());
     }
-
     /**
      * @return array of registered resources
      */
-    public function getResources(): array
+    public function get_resources(): array
     {
         return array_keys($this->resources);
     }

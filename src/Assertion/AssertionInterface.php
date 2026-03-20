@@ -1,14 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl\Assertion;
 
 use Laminas\Permissions\Acl\Acl;
-use Laminas\Permissions\Acl\Resource\ResourceInterface;
-use Laminas\Permissions\Acl\Role\RoleInterface;
-
-interface AssertionInterface
+use Laminas\Permissions\Acl\Resource\Resource_Interface;
+use Laminas\Permissions\Acl\Role\Role_Interface;
+interface Assertion_Interface
 {
     /**
      * Returns true if and only if the assertion conditions are met
@@ -20,10 +18,5 @@ interface AssertionInterface
      * @param  string|null $privilege
      * @return bool
      */
-    public function assert(
-        Acl $acl,
-        ?RoleInterface $role = null,
-        ?ResourceInterface $resource = null,
-        $privilege = null
-    );
+    public function assert(Acl $acl, ?Role_Interface $role = null, ?Resource_Interface $resource = null, $privilege = null);
 }

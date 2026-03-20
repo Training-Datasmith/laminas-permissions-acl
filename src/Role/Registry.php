@@ -1,17 +1,12 @@
 <?php
 
-declare(strict_types=1);
-
+declare (strict_types=1);
 namespace Laminas\Permissions\Acl\Role;
 
 use function is_array;
-
 use Laminas\Permissions\Acl\Exception;
-
 use function sprintf;
-
 use Traversable;
-
 class Registry
 {
     /**
@@ -20,7 +15,6 @@ class Registry
      * @var array<string, RoleInterface>
      */
     protected $roles = [];
-
     /**
      * Adds a Role having an identifier unique to the registry
      *
@@ -39,51 +33,35 @@ class Registry
      * @throws Exception\InvalidArgumentException
      * @return $this Provides a fluent interface
      */
-    public function add(RoleInterface $role, $parents = null): static
+    public function add(Role_Interface $role, $parents = null): static
     {
-        $roleId = $role->getRoleId();
-
-        if ($this->has($roleId)) {
-            throw new Exception\InvalidArgumentException(sprintf(
-                'Role id "%s" already exists in the registry',
-                $roleId
-            ));
+        $role_id = $role->get_role_id();
+        if ($this->has($role_id)) {
+            throw new Exception\InvalidArgumentException(sprintf('Role id "%s" already exists in the registry', $role_id));
         }
-
-        $roleParents = [];
-
+        $role_parents = [];
         if (null !== $parents) {
-            if (! is_array($parents) && ! $parents instanceof Traversable) {
+            if (!is_array($parents) && !$parents instanceof Traversable) {
                 $parents = [$parents];
             }
             foreach ($parents as $parent) {
                 try {
-                    if ($parent instanceof RoleInterface) {
-                        $roleParentId = $parent->getRoleId();
+                    if ($parent instanceof Role_Interface) {
+                        $role_parent_id = $parent->get_role_id();
                     } else {
-                        $roleParentId = $parent;
+                        $role_parent_id = $parent;
                     }
-                    $roleParent = $this->get($roleParentId);
+                    $role_parent = $this->get($role_parent_id);
                 } catch (\Exception $e) {
-                    throw new Exception\InvalidArgumentException(sprintf(
-                        'Parent Role id "%s" does not exist',
-                        $roleParentId
-                    ), 0, $e);
+                    throw new Exception\InvalidArgumentException(sprintf('Parent Role id "%s" does not exist', $role_parent_id), 0, $e);
                 }
-                $roleParents[$roleParentId]                      = $roleParent;
-                $this->roles[$roleParentId]['children'][$roleId] = $role;
+                $role_parents[$role_parent_id] = $role_parent;
+                $this->roles[$role_parent_id]['children'][$role_id] = $role;
             }
         }
-
-        $this->roles[$roleId] = [
-            'instance' => $role,
-            'parents'  => $roleParents,
-            'children' => [],
-        ];
-
+        $this->roles[$role_id] = ['instance' => $role, 'parents' => $role_parents, 'children' => []];
         return $this;
     }
-
     /**
      * Returns the identified Role
      *
@@ -95,19 +73,16 @@ class Registry
      */
     public function get($role)
     {
-        if ($role instanceof RoleInterface) {
-            $roleId = $role->getRoleId();
+        if ($role instanceof Role_Interface) {
+            $role_id = $role->get_role_id();
         } else {
-            $roleId = (string) $role;
+            $role_id = (string) $role;
         }
-
-        if (! $this->has($role)) {
-            throw new Exception\InvalidArgumentException("Role '$roleId' not found");
+        if (!$this->has($role)) {
+            throw new Exception\InvalidArgumentException("Role '{$role_id}' not found");
         }
-
-        return $this->roles[$roleId]['instance'];
+        return $this->roles[$role_id]['instance'];
     }
-
     /**
      * Returns true if and only if the Role exists in the registry
      *
@@ -117,15 +92,13 @@ class Registry
      */
     public function has($role): bool
     {
-        if ($role instanceof RoleInterface) {
-            $roleId = $role->getRoleId();
+        if ($role instanceof Role_Interface) {
+            $role_id = $role->get_role_id();
         } else {
-            $roleId = (string) $role;
+            $role_id = (string) $role;
         }
-
-        return isset($this->roles[$roleId]);
+        return isset($this->roles[$role_id]);
     }
-
     /**
      * Returns an array of an existing Role's parents
      *
@@ -139,13 +112,11 @@ class Registry
      * @param  RoleInterface|string $role
      * @return array
      */
-    public function getParents($role)
+    public function get_parents($role)
     {
-        $roleId = $this->get($role)->getRoleId();
-
-        return $this->roles[$roleId]['parents'];
+        $role_id = $this->get($role)->get_role_id();
+        return $this->roles[$role_id]['parents'];
     }
-
     /**
      * Returns true if and only if $role inherits from $inherit
      *
@@ -161,30 +132,25 @@ class Registry
      * @throws Exception\InvalidArgumentException
      * @return bool
      */
-    public function inherits($role, $inherit, $onlyParents = false)
+    public function inherits($role, $inherit, $only_parents = false)
     {
         try {
-            $roleId    = $this->get($role)->getRoleId();
-            $inheritId = $this->get($inherit)->getRoleId();
-        } catch (Exception\ExceptionInterface $e) {
-            throw new Exception\InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+            $role_id = $this->get($role)->get_role_id();
+            $inherit_id = $this->get($inherit)->get_role_id();
+        } catch (Exception\Exception_Interface $e) {
+            throw new Exception\InvalidArgumentException($e->get_message(), $e->get_code(), $e);
         }
-
-        $inherits = isset($this->roles[$roleId]['parents'][$inheritId]);
-
-        if ($inherits || $onlyParents) {
+        $inherits = isset($this->roles[$role_id]['parents'][$inherit_id]);
+        if ($inherits || $only_parents) {
             return $inherits;
         }
-
-        foreach ($this->roles[$roleId]['parents'] as $parentId => $parent) {
-            if ($this->inherits($parentId, $inheritId)) {
+        foreach ($this->roles[$role_id]['parents'] as $parent_id => $parent) {
+            if ($this->inherits($parent_id, $inherit_id)) {
                 return true;
             }
         }
-
         return false;
     }
-
     /**
      * Removes the Role from the registry
      *
@@ -197,41 +163,35 @@ class Registry
     public function remove($role): static
     {
         try {
-            $roleId = $this->get($role)->getRoleId();
-        } catch (Exception\ExceptionInterface $e) {
-            throw new Exception\InvalidArgumentException($e->getMessage(), $e->getCode(), $e);
+            $role_id = $this->get($role)->get_role_id();
+        } catch (Exception\Exception_Interface $e) {
+            throw new Exception\InvalidArgumentException($e->get_message(), $e->get_code(), $e);
         }
-
-        foreach ($this->roles[$roleId]['children'] as $childId => $child) {
-            unset($this->roles[$childId]['parents'][$roleId]);
+        foreach ($this->roles[$role_id]['children'] as $child_id => $child) {
+            unset($this->roles[$child_id]['parents'][$role_id]);
         }
-        foreach ($this->roles[$roleId]['parents'] as $parentId => $parent) {
-            unset($this->roles[$parentId]['children'][$roleId]);
+        foreach ($this->roles[$role_id]['parents'] as $parent_id => $parent) {
+            unset($this->roles[$parent_id]['children'][$role_id]);
         }
-
-        unset($this->roles[$roleId]);
-
+        unset($this->roles[$role_id]);
         return $this;
     }
-
     /**
      * Removes all Roles from the registry
      *
      * @return Registry Provides a fluent interface
      */
-    public function removeAll(): static
+    public function remove_all(): static
     {
         $this->roles = [];
-
         return $this;
     }
-
     /**
      * Get all roles in the registry
      *
      * @return array
      */
-    public function getRoles()
+    public function get_roles()
     {
         return $this->roles;
     }
