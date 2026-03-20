@@ -51,14 +51,24 @@ class Assertion_Aggregate implements Assertion_Interface
         $this->assertions = [];
         return $this;
     }
-    /** @return $this */
+    /**
+     * Set the AssertionManager used to resolve string-referenced assertions at runtime.
+     *
+     * @param  Assertion_Manager $manager The assertion manager instance.
+     * @return static                     Fluent interface.
+     */
     public function set_assertion_manager(Assertion_Manager $manager): static
     {
         $this->assertion_manager = $manager;
         return $this;
     }
-    /** @return AssertionManager|null */
-    public function get_assertion_manager()
+
+    /**
+     * Return the currently configured AssertionManager, or null if none is set.
+     *
+     * @return Assertion_Manager|null
+     */
+    public function get_assertion_manager(): ?Assertion_Manager
     {
         return $this->assertion_manager;
     }
@@ -83,11 +93,11 @@ class Assertion_Aggregate implements Assertion_Interface
         return $this;
     }
     /**
-     * Return current mode
+     * Return the current assertion chain evaluation mode.
      *
-     * @return string
+     * @return string One of MODE_ALL ('all') or MODE_AT_LEAST_ONE ('at_least_one').
      */
-    public function get_mode()
+    public function get_mode(): string
     {
         return $this->mode;
     }
